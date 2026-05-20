@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pentest Recon Toolkit Guide</title>
+<style>
+body{font-family:Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:20px;}
+.container{max-width:1000px; margin:auto;}
+h1,h2,h3{color:#38bdf8;}
+.card{background:#111827; padding:15px; border-radius:10px; margin-bottom:15px;}
+code{background:#0b1220; padding:2px 6px; border-radius:5px; color:#22c55e;}
+pre{background:#0b1220; padding:10px; border-radius:10px; overflow-x:auto; white-space:pre-wrap;}
+button{background:#38bdf8; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:5px;}
+details{margin-top:10px;}
+summary{cursor:pointer; color:#fbbf24;}
+
+/* Top bar */
+.topbar{
+  position:sticky;
+  top:0;
+  background:#0b1220;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  border-bottom:1px solid #1f2937;
+}
+input{
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #334155;
+  background:#111827;
+  color:#e2e8f0;
+  width:300px;
+}
+.smallbtn{
+  background:#22c55e;
+}
+</style>
+
+<script>
+let TARGET = "example.com";
+
+function setTarget(){
+  const input = document.getElementById('targetInput');
+  TARGET = input.value.trim() || "example.com";
+  updateAll();
+  alert('Target set to ' + TARGET);
+}
+
+function updateAll(){
+  document.querySelectorAll('[data-template]').forEach(el=>{
+    let template = el.getAttribute('data-template');
+    el.innerText = template.replaceAll('example.com', TARGET);
+  });
+}
+
+function copyCode(id){
+  const el=document.getElementById(id);
+  navigator.clipboard.writeText(el.innerText);
+  alert('Copied!');
+}
+
+window.onload = updateAll;
+</script>
+
+</head>
+<body>
+
+<div class="topbar">
+  <strong>Target:</strong>
+  <input id="targetInput" placeholder="enter domain e.g. test.com" />
+  <button class="smallbtn" onclick="setTarget()">Set Target</button>
+</div>
+
+<div class="container">
+
+<h1>🛡 Pentesting Recon Toolkit Guide (Dynamic)</h1>
+<p>Enter a target domain above — all commands update automatically.</p>
+
+<!-- SUBFINDER -->
+<div class="card">
+<h2>1. Subfinder</h2>
+<p>Find subdomains.</p>
+
+<pre id="sub1" data-template="subfinder -d example.com -all -silent"></pre>
+<button onclick="copyCode('sub1')">Copy</button>
+
+<details>
+<summary>🔧 Install</summary>
+<pre>go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</pre>
+</details>
+</div>
+
+<!-- ASSETFINDER -->
+<div class="card">
+<h2>2. Assetfinder</h2>
+<pre id="asset1" data-template="assetfinder example.com"></pre>
+<button onclick="copyCode('asset1')">Copy</button>
+<details>
+<summary>🔧 Install</summary>
+<pre>go install github.com/tomnomnom/assetfinder@latest</pre>
+</details>
+</div>
+
+<!-- HTTPX -->
+<div class="card">
+<h2>3. httpx</h2>
+<pre id="httpx1" data-template="cat subs.txt | httpx -silent -status-code -title -tech-detect"></pre>
+<button onclick="copyCode('httpx1')">Copy</button>
+<details>
+<summary>🔧 Install</summary>
+<pre>go install github.com/projectdiscovery/httpx/cmd/httpx@latest</pre>
+</details>
+</div>
+
+<!-- WAYBACK -->
+<div class="card">
+<h2>4. Waybackurls</h2>
+<pre id="way1" data-template="echo example.com | waybackurls"></pre>
+<button onclick="copyCode('way1')">Copy</button>
+<details>
+<summary>🔧 Install</summary>
+<pre>go install github.com/tomnomnom/waybackurls@latest</pre>
+</details>
+</div>
+
+<!-- FFUF -->
+<div class="card">
+<h2>5. ffuf</h2>
+<pre id="ffuf1" data-template="ffuf -u https://example.com/FUZZ -w wordlist.txt"></pre>
+<button onclick="copyCode('ffuf1')">Copy</button>
+<details>
+<summary>🔧 Install</summary>
+<pre>brew install ffuf</pre>
+</details>
+</div>
+
+<!-- NUCLEI -->
+<div class="card">
+<h2>6. Nuclei</h2>
+<pre id="nuc1" data-template="nuclei -l live.txt -severity high,critical"></pre>
+<button onclick="copyCode('nuc1')">Copy</button>
+<details>
+<summary>🔧 Install</summary>
+<pre>go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest</pre>
+</details>
+</div>
+
+<!-- BURP -->
+<div class="card">
+<h2>7. Burp Suite</h2>
+<p>Manual testing via proxy interception.</p>
+<details>
+<summary>🔧 Install</summary>
+<pre>brew install --cask burp-suite</pre>
+</details>
+</div>
+
+<!-- WORKFLOW -->
+<div class="card">
+<h2>🚀 Workflow</h2>
+<pre>
+1. subfinder / assetfinder → subdomains
+2. httpx → live hosts
+3. waybackurls → historical endpoints
+4. ffuf → hidden paths
+5. nuclei → vulnerabilities
+6. burp → manual testing
+</pre>
+</div>
+
+</div>
+
+</body>
+</html>

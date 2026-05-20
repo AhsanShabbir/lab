@@ -1,0 +1,12 @@
+# Ignore runtime data
+projects/
+loot/
+vms/
+
+# OS
+.DS_Store
+
+# recon outputs
+*.log
+*.txt
+*.json
