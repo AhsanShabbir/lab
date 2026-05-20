@@ -1,0 +1,5 @@
+# Sourced by scripts/run-recon.sh after LAB_ROOT is set
+WORDLIST="${LAB_ROOT:-}/wordlists/common-dirs.txt"
+NUCLEI_SEVERITY="high,critical"
+HTTPX_RATE=150
+FFUF_THREADS=40

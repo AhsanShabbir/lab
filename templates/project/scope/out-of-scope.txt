@@ -1,0 +1,1 @@
+# Add domains, IPs, or assets that must NOT be tested

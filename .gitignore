@@ -6,7 +6,9 @@ vms/
 # OS
 .DS_Store
 
-# recon outputs
-*.log
-*.txt
-*.json
+# Recon outputs inside projects (projects/ already ignored; explicit for safety)
+projects/**/recon/*.txt
+projects/**/recon/*.json
+projects/**/recon/*.log
+projects/**/recon/fuzz/
+projects/**/recon/nuclei/

@@ -36,6 +36,11 @@ input{
 .smallbtn{
   background:#22c55e;
 }
+.projectpath{
+  font-size:0.9em;
+  color:#94a3b8;
+  margin-left:auto;
+}
 </style>
 
 <script>
@@ -53,6 +58,10 @@ function updateAll(){
     let template = el.getAttribute('data-template');
     el.innerText = template.replaceAll('example.com', TARGET);
   });
+  const pathEl = document.getElementById('projectPath');
+  if (pathEl) {
+    pathEl.innerText = '~/lab/projects/' + TARGET + '/';
+  }
 }
 
 function copyCode(id){
@@ -71,12 +80,31 @@ window.onload = updateAll;
   <strong>Target:</strong>
   <input id="targetInput" placeholder="enter domain e.g. test.com" />
   <button class="smallbtn" onclick="setTarget()">Set Target</button>
+  <span class="projectpath" id="projectPath">~/lab/projects/example.com/</span>
 </div>
 
 <div class="container">
 
 <h1>🛡 Pentesting Recon Toolkit Guide (Dynamic)</h1>
 <p>Enter a target domain above — all commands update automatically.</p>
+
+<!-- AUTOMATED PIPELINE -->
+<div class="card">
+<h2>Automated pipeline</h2>
+<p>From lab root — creates project and runs subs → live → urls → nuclei → summary (ffuf with <code>--full</code>).</p>
+
+<pre id="pipe1" data-template="./start-project.sh --recon example.com"></pre>
+<button onclick="copyCode('pipe1')">Copy</button>
+
+<pre id="pipe2" data-template="./start-project.sh --recon --full example.com"></pre>
+<button onclick="copyCode('pipe2')">Copy</button>
+
+<pre id="pipe3" data-template="cd ~/lab/projects/example.com/recon && ~/lab/scripts/run-recon.sh --target example.com --resume"></pre>
+<button onclick="copyCode('pipe3')">Copy</button>
+
+<pre id="pipe4" data-template="make recon TARGET=example.com"></pre>
+<button onclick="copyCode('pipe4')">Copy</button>
+</div>
 
 <!-- SUBFINDER -->
 <div class="card">
