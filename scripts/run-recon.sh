@@ -12,6 +12,9 @@ ensure_lab_path
 # shellcheck source=config/recon.defaults
 source "$LAB_ROOT/config/recon.defaults"
 
+# shellcheck source=lib/filter-scope.sh
+source "$SCRIPT_DIR/lib/filter-scope.sh"
+
 RECON_DIR="$(pwd)"
 PROJECT_DIR="$(cd "$RECON_DIR/.." && pwd)"
 LOG_FILE="$RECON_DIR/run.log"
@@ -164,6 +167,7 @@ stage_subs() {
   wait
   cat "$sf" "$af" | sed '/^$/d' | sort -u > "$RECON_DIR/subs.txt"
   rm -f "$sf" "$af"
+  apply_scope_filter "subdomains" "$RECON_DIR/subs.txt" host
   log "Subdomains: $(wc -l < "$RECON_DIR/subs.txt" | tr -d ' ')"
 }
 
@@ -181,6 +185,7 @@ stage_live() {
     grep -oE '"url"\s*:\s*"[^"]+"' "$RECON_DIR/live.json" | sed 's/.*"url"\s*:\s*"//;s/"$//' > "$RECON_DIR/live.txt" || true
   fi
   [[ -s "$RECON_DIR/live.txt" ]] || cp "$RECON_DIR/subs.txt" "$RECON_DIR/live.txt"
+  filter_live_outputs
   log "Live hosts: $(wc -l < "$RECON_DIR/live.txt" | tr -d ' ')"
 }
 
@@ -198,6 +203,7 @@ stage_urls() {
   done < "$RECON_DIR/subs.txt"
   sort -u "$tmp" -o "$RECON_DIR/urls.txt"
   rm -f "$tmp"
+  apply_scope_filter "URLs" "$RECON_DIR/urls.txt" url
   log "URLs collected: $(wc -l < "$RECON_DIR/urls.txt" | tr -d ' ')"
 }
 
@@ -229,8 +235,12 @@ stage_scan() {
     return
   fi
   [[ -s "$RECON_DIR/live.txt" ]] || die "live.txt empty — run live stage first"
+  filter_live_outputs
   mkdir -p "$RECON_DIR/nuclei"
+  local exclude_hosts="$RECON_DIR/nuclei/exclude-hosts.txt"
+  nuclei_exclude_hosts_file "$exclude_hosts"
   nuclei -l "$RECON_DIR/live.txt" -severity "$NUCLEI_SEVERITY" \
+    -exclude-hosts "$exclude_hosts" \
     -jsonl-export "$jsonl" \
     -o "$RECON_DIR/nuclei/summary.txt" || true
   log "Nuclei scan complete"
@@ -338,7 +348,7 @@ main() {
   resolve_target
   : > "$LOG_FILE"
   log "Recon pipeline — target: $TARGET"
-  log "Lab root: $LAB_ROOT"
+  log "WISE lab root: $LAB_ROOT"
   log "Recon dir: $RECON_DIR"
 
   if [[ -n "$ONLY_STAGE" ]]; then

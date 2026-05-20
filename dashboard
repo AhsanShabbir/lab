@@ -1,0 +1,56 @@
+#!/bin/bash
+# Start the WISE lab dashboard and open it in your browser.
+
+set -euo pipefail
+
+LAB_ROOT="$(cd "$(dirname "$0")" && pwd)"
+SERVER="$LAB_ROOT/tools/dashboard/server.py"
+PORT="${DASHBOARD_PORT:-7331}"
+HOST="${DASHBOARD_HOST:-127.0.0.1}"
+URL="http://${HOST}:${PORT}/"
+
+if [[ ! -f "$SERVER" ]]; then
+  echo "Dashboard server not found: $SERVER" >&2
+  exit 1
+fi
+
+if ! command -v python3 &>/dev/null; then
+  echo "python3 is required to run the dashboard." >&2
+  exit 1
+fi
+
+# Reuse server if already listening
+if command -v lsof &>/dev/null && lsof -iTCP:"$PORT" -sTCP:LISTEN -t &>/dev/null; then
+  echo "[+] WISE lab already running at $URL"
+else
+  echo "[+] Starting WISE lab on $URL"
+  DASHBOARD_PORT="$PORT" DASHBOARD_HOST="$HOST" DASHBOARD_QUIET=1 \
+    python3 "$SERVER" &
+  SERVER_PID=$!
+  trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT INT TERM
+
+  for _ in $(seq 1 30); do
+    if curl -sf "$URL" -o /dev/null 2>/dev/null; then
+      break
+    fi
+    sleep 0.2
+  done
+fi
+
+open_browser() {
+  if [[ "$(uname -s)" == "Darwin" ]] && command -v open &>/dev/null; then
+    open "$URL"
+  elif command -v xdg-open &>/dev/null; then
+    xdg-open "$URL"
+  else
+    echo "[+] Open in browser: $URL"
+  fi
+}
+
+open_browser
+
+# If we started the server, keep it in foreground until Ctrl+C
+if [[ -n "${SERVER_PID:-}" ]]; then
+  echo "[+] Press Ctrl+C to stop WISE lab"
+  wait "$SERVER_PID"
+fi

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pentest Recon Toolkit Guide</title>
+<title>WISE lab — Recon Toolkit</title>
 <style>
 body{font-family:Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:20px;}
 .container{max-width:1000px; margin:auto;}
@@ -85,7 +85,7 @@ window.onload = updateAll;
 
 <div class="container">
 
-<h1>🛡 Pentesting Recon Toolkit Guide (Dynamic)</h1>
+<h1>WISE lab — Recon Toolkit</h1>
 <p>Enter a target domain above — all commands update automatically.</p>
 
 <!-- AUTOMATED PIPELINE -->
@@ -93,13 +93,13 @@ window.onload = updateAll;
 <h2>Automated pipeline</h2>
 <p>From lab root — creates project and runs subs → live → urls → nuclei → summary (ffuf with <code>--full</code>).</p>
 
-<pre id="pipe1" data-template="./start-project.sh --recon example.com"></pre>
+<pre id="pipe1" data-template="./target --recon example.com"></pre>
 <button onclick="copyCode('pipe1')">Copy</button>
 
-<pre id="pipe2" data-template="./start-project.sh --recon --full example.com"></pre>
+<pre id="pipe2" data-template="./target --recon --full example.com"></pre>
 <button onclick="copyCode('pipe2')">Copy</button>
 
-<pre id="pipe3" data-template="cd ~/lab/projects/example.com/recon && ~/lab/scripts/run-recon.sh --target example.com --resume"></pre>
+<pre id="pipe3" data-template="./target --recon --resume example.com"></pre>
 <button onclick="copyCode('pipe3')">Copy</button>
 
 <pre id="pipe4" data-template="make recon TARGET=example.com"></pre>

@@ -16,20 +16,23 @@ declare -a RECON_ARGS=()
 
 usage() {
   cat <<EOF
-Usage: start-project.sh [options] <target-domain>
+Usage: target [options] <target-domain>
+
+Ensures projects/<domain>/ exists, then optionally runs recon.
 
 Options:
-  --recon           Run recon pipeline after creating project
+  --recon           Run recon pipeline after ensuring project exists
   --full            Include ffuf stage (passes --full to run-recon.sh)
   --resume          Skip stages with existing output
   --only <stage>    Run single pipeline stage (subs|live|urls|fuzz|scan|summary)
   --skip <stage>    Skip stage (repeatable)
 
 Examples:
-  ./start-project.sh client.com
-  ./start-project.sh --recon client.com
-  ./start-project.sh --recon --full client.com
-  ./start-project.sh --recon --only scan client.com
+  ./target client.com
+  ./target --recon client.com
+  ./target --recon --resume client.com
+  ./target --recon --full client.com
+  ./target --recon --only scan client.com
 EOF
   exit 1
 }
@@ -79,7 +82,7 @@ copy_template_file() {
   substitute_template "$src" "$dest"
 }
 
-echo "[+] Creating project for $TARGET..."
+echo "[+] Ensuring project for $TARGET..."
 
 mkdir -p "$BASE"/{recon,exploits,notes,reports,screenshots,scope}
 
@@ -99,12 +102,12 @@ if [[ ! -f "$BASE/meta.json" ]]; then
   substitute_template "$TEMPLATE_DIR/meta.json" "$BASE/meta.json"
 fi
 
-echo "[+] Project created at $BASE"
+echo "[+] Project ready at $BASE"
 
 if [[ "$RUN_RECON" != true ]]; then
   echo "[+] Next step:"
   echo "  cd $BASE/recon && $LAB_ROOT/scripts/run-recon.sh --target $TARGET"
-  echo "  Or: $LAB_ROOT/start-project.sh --recon $TARGET"
+  echo "  Or: $LAB_ROOT/target --recon $TARGET"
   exit 0
 fi
 

@@ -1,0 +1,91 @@
+# Major third-party / CDN / SaaS hosts — excluded from recon and nuclei scans.
+# Matched as exact host or subdomain (e.g. youtube.com blocks consent.youtube.com).
+# One domain per line; lines starting with # are ignored.
+
+# Social
+twitter.com
+x.com
+facebook.com
+fb.com
+instagram.com
+whatsapp.com
+meta.com
+linkedin.com
+pinterest.com
+reddit.com
+tiktok.com
+snapchat.com
+vk.com
+
+# Google
+google.com
+youtube.com
+googleapis.com
+gstatic.com
+googleusercontent.com
+google-analytics.com
+googletagmanager.com
+googlesyndication.com
+googleadservices.com
+doubleclick.net
+googletagservices.com
+googlevideo.com
+ytimg.com
+
+# Microsoft
+microsoft.com
+live.com
+outlook.com
+office.com
+office365.com
+azure.com
+windows.net
+bing.com
+msn.com
+skype.com
+
+# Apple / Amazon
+apple.com
+icloud.com
+amazon.com
+amazonaws.com
+cloudfront.net
+
+# Other big platforms
+github.com
+gitlab.com
+bitbucket.org
+cloudflare.com
+akamai.net
+akamaiedge.net
+fastly.net
+wordpress.com
+wordpress.org
+wikipedia.org
+yahoo.com
+paypal.com
+stripe.com
+shopify.com
+slack.com
+discord.com
+zoom.us
+dropbox.com
+adobe.com
+salesforce.com
+hubspot.com
+mailchimp.com
+sendgrid.net
+twilio.com
+cloudinary.com
+jsdelivr.net
+cdnjs.cloudflare.com
+unpkg.com
+gravatar.com
+wp.com
+tumblr.com
+flickr.com
+vimeo.com
+dailymotion.com
+twitch.tv
+spotify.com
+soundcloud.com

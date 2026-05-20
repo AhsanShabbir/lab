@@ -13,7 +13,7 @@ log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
 
 main() {
-  log "Lab root: $LAB_ROOT"
+  log "WISE lab root: $LAB_ROOT"
   ensure_lab_path
 
   local missing=()
