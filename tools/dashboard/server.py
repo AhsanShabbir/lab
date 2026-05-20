@@ -43,6 +43,22 @@ def read_text(path: Path, limit: int | None = None) -> str | None:
         return None
 
 
+def read_sqli_findings(path: Path) -> dict:
+    """Load sqlmap/findings.json — list of {url, parameter, injectionType}."""
+    if not path.is_file():
+        return {"total": 0, "candidates": 0, "items": []}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (json.JSONDecodeError, OSError):
+        return {"total": 0, "candidates": 0, "items": []}
+    if not isinstance(data, list):
+        return {"total": 0, "candidates": 0, "items": []}
+    items = [row for row in data if isinstance(row, dict) and row.get("url")]
+    candidates_path = path.parent / "candidates.txt"
+    candidates = count_lines(candidates_path)
+    return {"total": len(items), "candidates": candidates, "items": items[:50]}
+
+
 def nuclei_severity_counts(jsonl: Path) -> dict[str, int]:
     counts: dict[str, int] = defaultdict(int)
     if not jsonl.is_file():
@@ -150,6 +166,7 @@ def build_project_summary(name: str) -> dict | None:
     recon = root / "recon"
     nuclei = nuclei_severity_counts(recon / "nuclei" / "results.jsonl")
     nuc_total = sum(nuclei.values())
+    sqli = read_sqli_findings(recon / "sqlmap" / "findings.json")
 
     findings_path = root / "reports" / "findings.md"
     findings_text = read_text(findings_path, limit=4000)
@@ -173,6 +190,7 @@ def build_project_summary(name: str) -> dict | None:
                 "total": nuc_total,
                 "bySeverity": nuclei,
             },
+            "sqli": sqli,
             "hasSummary": (recon / "summary.md").is_file(),
             "run": recon_run_status(recon / "run.log"),
         },
@@ -214,6 +232,9 @@ def build_project_detail(name: str) -> dict | None:
         "recon/README.md",
         "notes/README.md",
         "recon/nuclei/summary.txt",
+        "recon/sqlmap/vulnerable.txt",
+        "recon/sqlmap/findings.json",
+        "recon/sqlmap/candidates.txt",
         "scope/in-scope.txt",
         "scope/out-of-scope.txt",
     ):
@@ -233,6 +254,8 @@ def build_project_detail(name: str) -> dict | None:
             "runLog": read_text(recon / "run.log", limit=12000),
             "notes": read_text(root / "notes" / "README.md"),
             "nucleiSummary": read_text(recon / "nuclei" / "summary.txt", limit=20000),
+            "sqliFindings": read_text(recon / "sqlmap" / "findings.json", limit=50000),
+            "sqliVulnerable": read_text(recon / "sqlmap" / "vulnerable.txt", limit=20000),
         },
         "liveHosts": live_preview,
         "files": files,

@@ -9,6 +9,9 @@ GO_TOOLS=(
   "github.com/projectdiscovery/httpx/cmd/httpx@latest"
   "github.com/tomnomnom/waybackurls@latest"
   "github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+  "github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
+  "github.com/projectdiscovery/katana/cmd/katana@latest"
+  "github.com/lc/gau/v2/cmd/gau@latest"
 )
 
 log() { echo "[+] $*"; }
@@ -37,10 +40,12 @@ main() {
   fi
 
   if command -v brew &>/dev/null; then
-    if brew list ffuf &>/dev/null; then
-      log "brew upgrade ffuf"
-      brew upgrade ffuf 2>/dev/null || true
-    fi
+    for formula in ffuf jq findomain; do
+      if brew list "$formula" &>/dev/null; then
+        log "brew upgrade $formula"
+        brew upgrade "$formula" 2>/dev/null || true
+      fi
+    done
   fi
 
   log "Update complete. Run: $LAB_ROOT/tools/doctor.sh"

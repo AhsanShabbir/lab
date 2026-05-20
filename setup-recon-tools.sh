@@ -12,12 +12,15 @@ GO_TOOLS=(
   "github.com/projectdiscovery/httpx/cmd/httpx@latest"
   "github.com/tomnomnom/waybackurls@latest"
   "github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+  "github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
+  "github.com/projectdiscovery/katana/cmd/katana@latest"
+  "github.com/lc/gau/v2/cmd/gau@latest"
 )
 
-BREW_FORMULAE=(ffuf)
+BREW_FORMULAE=(ffuf jq findomain sqlmap)
 BREW_CASKS=(burp-suite)
 
-REQUIRED_BINS=(subfinder assetfinder httpx waybackurls ffuf nuclei)
+REQUIRED_BINS=(subfinder assetfinder httpx waybackurls gau katana dnsx ffuf nuclei jq)
 
 log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
@@ -82,6 +85,18 @@ verify_tools() {
   for bin in "${REQUIRED_BINS[@]}"; do
     echo "  $(command -v "$bin")"
   done
+
+  if command -v findomain &>/dev/null; then
+    log "findomain (optional): $(command -v findomain)"
+  else
+    warn "findomain not installed — subs stage will skip it (brew install findomain)"
+  fi
+
+  if command -v sqlmap &>/dev/null; then
+    log "sqlmap: $(command -v sqlmap)"
+  else
+    warn "sqlmap not installed — sqli stage will fail (brew install sqlmap)"
+  fi
 
   if [[ -d "/Applications/Burp Suite Community Edition.app" ]] \
      || [[ -d "/Applications/Burp Suite Professional.app" ]] \

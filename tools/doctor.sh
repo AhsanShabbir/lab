@@ -6,8 +6,8 @@ LAB_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=../scripts/lib/paths.sh
 source "$LAB_ROOT/scripts/lib/paths.sh"
 
-REQUIRED_BINS=(subfinder assetfinder httpx waybackurls ffuf nuclei)
-OPTIONAL_BINS=(jq go brew)
+REQUIRED_BINS=(subfinder assetfinder httpx waybackurls gau katana dnsx ffuf nuclei jq)
+OPTIONAL_BINS=(findomain sqlmap go brew)
 
 log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
@@ -35,6 +35,7 @@ main() {
   done
 
   [[ -f "$LAB_ROOT/config/recon.defaults" ]] && log "OK  config/recon.defaults" || warn "missing config/recon.defaults"
+  [[ -f "$LAB_ROOT/config/third-party-domains.txt" ]] && log "OK  config/third-party-domains.txt" || warn "missing config/third-party-domains.txt"
   [[ -f "$LAB_ROOT/wordlists/common-dirs.txt" ]] && log "OK  wordlists/common-dirs.txt" || warn "missing wordlists/common-dirs.txt"
   [[ -x "$LAB_ROOT/scripts/run-recon.sh" ]] && log "OK  scripts/run-recon.sh" || warn "scripts/run-recon.sh not executable"
 

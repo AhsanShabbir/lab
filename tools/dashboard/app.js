@@ -15,6 +15,29 @@ function renderMarkdown(text) {
   return marked.parse(text, { breaks: true });
 }
 
+function renderSqliPanel(sqli) {
+  const total = sqli?.total ?? 0;
+  const candidates = sqli?.candidates ?? 0;
+  if (!candidates && !total) {
+    return '<p class="empty">No sqlmap run yet (sqli stage).</p>';
+  }
+  if (!total) {
+    return `<p class="sqli-ok">Tested <strong>${candidates}</strong> parameterized URL(s); no confirmed SQL injection in automated pass.</p>`;
+  }
+  const rows = (sqli.items || [])
+    .map(
+      (item) => `
+      <div class="sqli-hit">
+        <a href="${escapeAttr(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.url)}</a>
+        <span class="sqli-meta">parameter <code>${escapeHtml(item.parameter || "?")}</code> — ${escapeHtml(item.injectionType || "unknown")}</span>
+      </div>`
+    )
+    .join("");
+  return `
+    <p class="sqli-alert"><strong>${total}</strong> potentially injectable URL(s) — confirm manually before reporting.</p>
+    <div class="sqli-list">${rows}</div>`;
+}
+
 function formatNuclei(nuclei) {
   const total = nuclei?.total ?? 0;
   if (!total) return "0 findings";
@@ -58,6 +81,7 @@ function renderProjectList(filter = "") {
             <span class="chip live">${r.live ?? 0} live</span>
             <span class="chip">${r.subs ?? 0} subs</span>
             ${nuc ? `<span class="chip nuc warn">${nuc} nuclei</span>` : ""}
+            ${(r.sqli?.total || 0) > 0 ? `<span class="chip sqli">${r.sqli.total} sqli</span>` : ""}
           </div>
         </button>`;
     })
@@ -180,6 +204,10 @@ function renderTabContent(p) {
           </div>
           ${renderNucleiBreakdown(r.nuclei)}
         </div>
+        <div class="panel panel-sqli">
+          <h3>SQL injection (sqlmap)</h3>
+          ${renderSqliPanel(r.sqli)}
+        </div>
         <div class="panel">
           <h3>Recon summary</h3>
           <div class="md-content">${renderMarkdown(c.reconSummary)}</div>
@@ -238,9 +266,11 @@ function renderTabContent(p) {
             ${metric("Live hosts", r.live)}
             ${metric("URLs", r.urls)}
             ${metric("Nuclei", r.nuclei?.total ?? 0)}
+            ${metric("SQLi", r.sqli?.total ?? 0)}
           </div>
           <p style="margin-top:12px;color:var(--muted);font-size:0.85rem">
             Nuclei: ${escapeHtml(formatNuclei(r.nuclei))}
+            ${(r.sqli?.total || 0) > 0 ? ` · <span class="sqli-inline">${r.sqli.total} sqlmap hit(s)</span>` : ""}
             ${run.lastLine ? ` · Last log: ${escapeHtml(run.lastLine)}` : ""}
           </p>
         </div>

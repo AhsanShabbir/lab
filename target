@@ -24,7 +24,7 @@ Options:
   --recon           Run recon pipeline after ensuring project exists
   --full            Include ffuf stage (passes --full to run-recon.sh)
   --resume          Skip stages with existing output
-  --only <stage>    Run single pipeline stage (subs|live|urls|fuzz|scan|summary)
+  --only <stage>    Run single pipeline stage (subs|dns|live|urls|crawl|fuzz|scan|sqli|summary)
   --skip <stage>    Skip stage (repeatable)
 
 Examples:

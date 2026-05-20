@@ -1,2 +1,6 @@
-# Per-project exclusions (merged with config/third-party-domains.txt)
-# Global blocklist already covers twitter.com, google.com, youtube.com, etc.
+# Domains that must NOT be tested (merged with config/third-party-domains.txt)
+# Examples — remove or edit for your engagement:
+# twitter.com
+# appsclub.com
+# office365.com
+# outlook.com

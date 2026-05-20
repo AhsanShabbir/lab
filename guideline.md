@@ -60,18 +60,27 @@ make recon TARGET=example.com
 Stages run in order:
 
 ```
-subs → live → urls → scan → summary
-              ↘ fuzz (optional, only with --full)
+subs → dns → live → urls → crawl → scan → sqli → summary
+                              ↘ fuzz (optional, only with --full)
 ```
 
 | Stage | Output | Requires |
 |-------|--------|----------|
-| `subs` | `subs.txt` | — |
+| `subs` | `subs.txt` | — (subfinder -all, assetfinder, findomain) |
+| `dns` | `dns.json`, `dns.txt` | `subs.txt` (skip if `ENABLE_DNS_STAGE=false`) |
 | `live` | `live.txt`, `live.json` | `subs.txt` |
-| `urls` | `urls.txt` | `subs.txt` |
+| `urls` | `urls-archive.txt` | `subs.txt` (gau + waybackurls) |
+| `crawl` | `urls-live.txt`, `urls.txt` | `live.txt` (katana, capped hosts) |
 | `fuzz` | `fuzz/*.json` | `live.txt` and `--full` |
-| `scan` | `nuclei/results.jsonl`, `nuclei/summary.txt` | `live.txt` |
+| `scan` | `nuclei/results*.jsonl`, summaries | `live.txt`; builds `urls-scan.txt` |
+| `sqli` | `sqlmap/vulnerable.txt`, `sqlmap/findings.json` | parameterized URLs from crawl/archive |
 | `summary` | `summary.md` | prior stage outputs |
+
+**Dual-pass nuclei:** pass 1 on `live.txt` (high/critical); pass 2 on `urls-scan.txt` (medium+, tag-limited). Merged into `nuclei/results.jsonl`.
+
+**SQLmap (`sqli` stage):** tests up to `SQLMAP_MAX_URLS` parameterized URLs (`--smart`, level/risk from config). Hits are listed in `summary.md` and highlighted in the dashboard. Set `ENABLE_SQLMAP_STAGE=false` to skip. Requires `sqlmap` (`brew install sqlmap`).
+
+Tune caps and scanners in `config/recon.defaults` (`CRAWL_MAX_HOSTS`, `URLS_SCAN_MAX`, `NUCLEI_*`, `SQLMAP_*`, etc.).
 
 Run from the project recon directory:
 
@@ -107,7 +116,7 @@ cd ~/lab/projects/example.com/recon
 ~/lab/scripts/run-recon.sh --target example.com --resume
 ```
 
-`make recon TARGET=example.com` does **not** pass `--resume`; use `./target` or `run-recon.sh` directly when resuming.
+`make recon TARGET=example.com` does **not** pass `--resume`. Use `make recon-resume TARGET=example.com`, `./target --recon --resume`, or `run-recon.sh --resume` when continuing a partial run.
 
 ### Run a single stage
 
@@ -136,8 +145,9 @@ cd ~/lab/projects/example.com/recon
 
 To refresh only one stage, delete its output file(s), then use `--resume` so other stages stay skipped:
 
-- Re-scan: `rm nuclei/results.jsonl` then `--only scan` or `--resume`
-- Re-fetch subs: `rm subs.txt` (and usually `live.txt`, `urls.txt` if you want those refreshed too)
+- Re-scan: `rm nuclei/results.jsonl nuclei/results-live.jsonl nuclei/results-urls.jsonl` then `--only scan` or `--resume`
+- Re-fetch subs: `rm subs.txt` (and usually `live.txt`, `urls-archive.txt`, `urls-live.txt` if you want those refreshed too)
+- Re-crawl only: `rm urls-live.txt` then `--only crawl --resume`
 
 ### Directory fuzzing (ffuf)
 
@@ -188,7 +198,7 @@ The recon toolkit command reference is linked from the dashboard (`tools/dashboa
 |------|---------|
 | New project | `./target <domain>` |
 | New project + recon | `./target --recon <domain>` |
-| Resume recon | `run-recon.sh --target <domain> --resume` (from `recon/`) |
+| Resume recon | `make recon-resume TARGET=<domain>` or `run-recon.sh --target <domain> --resume` |
 | One stage | `run-recon.sh --target <domain> --only <stage>` |
 | Full recon (overwrite) | `run-recon.sh --target <domain>` |
 | Include ffuf | add `--full` |
@@ -196,7 +206,7 @@ The recon toolkit command reference is linked from the dashboard (`tools/dashboa
 | View projects | `./dashboard` |
 | Watch pipeline | `tail -f projects/<domain>/recon/run.log` |
 
-**Stages:** `subs` | `live` | `urls` | `fuzz` | `scan` | `summary`
+**Stages:** `subs` | `dns` | `live` | `urls` | `crawl` | `fuzz` | `scan` | `sqli` | `summary`
 
 **Skip stages:** `--skip <stage>` (repeatable)
 
@@ -211,6 +221,7 @@ make setup              # install recon tools
 make doctor             # health check
 make project TARGET=x   # create project
 make recon TARGET=x     # create (if needed) + full recon
+make recon-resume TARGET=x  # continue partial run
 make dashboard          # open WISE lab UI
 ```
 
@@ -220,5 +231,6 @@ make dashboard          # open WISE lab UI
 
 - Always `source ~/lab/config/shell-path.sh` in new shells so `subfinder`, `httpx`, `nuclei`, etc. are on `PATH`.
 - Keep `scope/out-of-scope.txt` up to date before long runs (e.g. third-party login domains).
-- Large `urls.txt` files are normal after wayback collection; focus manual testing on `live.txt` first.
+- Large `urls-archive.txt` / `urls.txt` files are normal; focus manual testing on `live.txt` and `urls-live.txt` first.
+- `run.log` appends each run (banner per run) — use `tail` on the last section for the current job.
 - Findings live in markdown under `reports/`; the dashboard renders them but does not edit them.

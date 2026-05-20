@@ -13,192 +13,149 @@ pre{background:#0b1220; padding:10px; border-radius:10px; overflow-x:auto; white
 button{background:#38bdf8; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:5px;}
 details{margin-top:10px;}
 summary{cursor:pointer; color:#fbbf24;}
-
-/* Top bar */
-.topbar{
-  position:sticky;
-  top:0;
-  background:#0b1220;
-  padding:10px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  border-bottom:1px solid #1f2937;
-}
-input{
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #334155;
-  background:#111827;
-  color:#e2e8f0;
-  width:300px;
-}
-.smallbtn{
-  background:#22c55e;
-}
-.projectpath{
-  font-size:0.9em;
-  color:#94a3b8;
-  margin-left:auto;
-}
+.topbar{position:sticky;top:0;background:#0b1220;padding:10px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #1f2937;}
+input{padding:8px;border-radius:6px;border:1px solid #334155;background:#111827;color:#e2e8f0;width:300px;}
+.smallbtn{background:#22c55e;}
+.projectpath{font-size:0.9em;color:#94a3b8;margin-left:auto;}
 </style>
-
 <script>
 let TARGET = "example.com";
-
 function setTarget(){
   const input = document.getElementById('targetInput');
   TARGET = input.value.trim() || "example.com";
   updateAll();
   alert('Target set to ' + TARGET);
 }
-
 function updateAll(){
   document.querySelectorAll('[data-template]').forEach(el=>{
     let template = el.getAttribute('data-template');
     el.innerText = template.replaceAll('example.com', TARGET);
   });
   const pathEl = document.getElementById('projectPath');
-  if (pathEl) {
-    pathEl.innerText = '~/lab/projects/' + TARGET + '/';
-  }
+  if (pathEl) pathEl.innerText = '~/lab/projects/' + TARGET + '/';
 }
-
 function copyCode(id){
-  const el=document.getElementById(id);
-  navigator.clipboard.writeText(el.innerText);
+  navigator.clipboard.writeText(document.getElementById(id).innerText);
   alert('Copied!');
 }
-
 window.onload = updateAll;
 </script>
-
 </head>
 <body>
-
 <div class="topbar">
   <strong>Target:</strong>
   <input id="targetInput" placeholder="enter domain e.g. test.com" />
   <button class="smallbtn" onclick="setTarget()">Set Target</button>
   <span class="projectpath" id="projectPath">~/lab/projects/example.com/</span>
 </div>
-
 <div class="container">
-
 <h1>WISE lab — Recon Toolkit</h1>
 <p>Enter a target domain above — all commands update automatically.</p>
 
-<!-- AUTOMATED PIPELINE -->
 <div class="card">
 <h2>Automated pipeline</h2>
-<p>From lab root — creates project and runs subs → live → urls → nuclei → summary (ffuf with <code>--full</code>).</p>
-
+<p>Default: <code>subs → dns → live → urls → crawl → scan → sqli → summary</code>. Ffuf with <code>--full</code>.</p>
 <pre id="pipe1" data-template="./target --recon example.com"></pre>
 <button onclick="copyCode('pipe1')">Copy</button>
-
 <pre id="pipe2" data-template="./target --recon --full example.com"></pre>
 <button onclick="copyCode('pipe2')">Copy</button>
-
 <pre id="pipe3" data-template="./target --recon --resume example.com"></pre>
 <button onclick="copyCode('pipe3')">Copy</button>
-
-<pre id="pipe4" data-template="make recon TARGET=example.com"></pre>
+<pre id="pipe4" data-template="make recon-resume TARGET=example.com"></pre>
 <button onclick="copyCode('pipe4')">Copy</button>
 </div>
 
-<!-- SUBFINDER -->
 <div class="card">
 <h2>1. Subfinder</h2>
-<p>Find subdomains.</p>
-
 <pre id="sub1" data-template="subfinder -d example.com -all -silent"></pre>
 <button onclick="copyCode('sub1')">Copy</button>
-
-<details>
-<summary>🔧 Install</summary>
-<pre>go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</pre>
-</details>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</pre></details>
 </div>
 
-<!-- ASSETFINDER -->
 <div class="card">
-<h2>2. Assetfinder</h2>
+<h2>2. Assetfinder / Findomain</h2>
 <pre id="asset1" data-template="assetfinder example.com"></pre>
 <button onclick="copyCode('asset1')">Copy</button>
-<details>
-<summary>🔧 Install</summary>
-<pre>go install github.com/tomnomnom/assetfinder@latest</pre>
-</details>
+<pre id="find1" data-template="findomain -t example.com -q"></pre>
+<button onclick="copyCode('find1')">Copy</button>
+<details><summary>Install</summary><pre>go install github.com/tomnomnom/assetfinder@latest
+brew install findomain</pre></details>
 </div>
 
-<!-- HTTPX -->
 <div class="card">
-<h2>3. httpx</h2>
-<pre id="httpx1" data-template="cat subs.txt | httpx -silent -status-code -title -tech-detect"></pre>
+<h2>3. dnsx</h2>
+<pre id="dns1" data-template="dnsx -l subs.txt -json -o dns.json -a -cname -mx -resp -silent"></pre>
+<button onclick="copyCode('dns1')">Copy</button>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest</pre></details>
+</div>
+
+<div class="card">
+<h2>4. httpx</h2>
+<pre id="httpx1" data-template="httpx -l subs.txt -silent -status-code -title -tech-detect -json -o live.json"></pre>
 <button onclick="copyCode('httpx1')">Copy</button>
-<details>
-<summary>🔧 Install</summary>
-<pre>go install github.com/projectdiscovery/httpx/cmd/httpx@latest</pre>
-</details>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/httpx/cmd/httpx@latest</pre></details>
 </div>
 
-<!-- WAYBACK -->
 <div class="card">
-<h2>4. Waybackurls</h2>
+<h2>5. gau / waybackurls</h2>
+<pre id="gau1" data-template="gau --subs example.com"></pre>
+<button onclick="copyCode('gau1')">Copy</button>
 <pre id="way1" data-template="echo example.com | waybackurls"></pre>
 <button onclick="copyCode('way1')">Copy</button>
-<details>
-<summary>🔧 Install</summary>
-<pre>go install github.com/tomnomnom/waybackurls@latest</pre>
-</details>
+<details><summary>Install</summary><pre>go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest</pre></details>
 </div>
 
-<!-- FFUF -->
 <div class="card">
-<h2>5. ffuf</h2>
+<h2>6. katana</h2>
+<pre id="kat1" data-template="katana -list live.txt -depth 2 -rate-limit 50 -silent -o urls-live.txt"></pre>
+<button onclick="copyCode('kat1')">Copy</button>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/katana/cmd/katana@latest</pre></details>
+</div>
+
+<div class="card">
+<h2>7. ffuf</h2>
 <pre id="ffuf1" data-template="ffuf -u https://example.com/FUZZ -w wordlist.txt"></pre>
 <button onclick="copyCode('ffuf1')">Copy</button>
-<details>
-<summary>🔧 Install</summary>
-<pre>brew install ffuf</pre>
-</details>
+<details><summary>Install</summary><pre>brew install ffuf</pre></details>
 </div>
 
-<!-- NUCLEI -->
 <div class="card">
-<h2>6. Nuclei</h2>
-<pre id="nuc1" data-template="nuclei -l live.txt -severity high,critical"></pre>
+<h2>8. Nuclei (dual pass)</h2>
+<pre id="nuc1" data-template="nuclei -l live.txt -severity high,critical -jsonl-export results-live.jsonl"></pre>
 <button onclick="copyCode('nuc1')">Copy</button>
-<details>
-<summary>🔧 Install</summary>
-<pre>go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest</pre>
-</details>
+<pre id="nuc2" data-template="nuclei -l urls-scan.txt -severity medium,high,critical -tags cve,exposure,misconfig -jsonl-export results-urls.jsonl"></pre>
+<button onclick="copyCode('nuc2')">Copy</button>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest</pre></details>
 </div>
 
-<!-- BURP -->
 <div class="card">
-<h2>7. Burp Suite</h2>
+<h2>9. sqlmap</h2>
+<pre id="sql1" data-template="sqlmap -m sqlmap/candidates.txt --batch --smart --output-dir=sqlmap/output"></pre>
+<button onclick="copyCode('sql1')">Copy</button>
+<details><summary>Install</summary><pre>brew install sqlmap</pre></details>
+</div>
+
+<div class="card">
+<h2>10. Burp Suite</h2>
 <p>Manual testing via proxy interception.</p>
-<details>
-<summary>🔧 Install</summary>
-<pre>brew install --cask burp-suite</pre>
-</details>
+<details><summary>Install</summary><pre>brew install --cask burp-suite</pre></details>
 </div>
 
-<!-- WORKFLOW -->
 <div class="card">
-<h2>🚀 Workflow</h2>
+<h2>Workflow</h2>
 <pre>
-1. subfinder / assetfinder → subdomains
-2. httpx → live hosts
-3. waybackurls → historical endpoints
-4. ffuf → hidden paths
-5. nuclei → vulnerabilities
-6. burp → manual testing
+1. subfinder / assetfinder / findomain → subs.txt
+2. dnsx → dns.json
+3. httpx → live.txt
+4. gau + waybackurls → urls-archive.txt
+5. katana → urls-live.txt → urls.txt
+6. nuclei (live + urls-scan) → results.jsonl
+7. sqlmap → sqlmap/vulnerable.txt (highlighted in dashboard)
+8. optional ffuf → fuzz/
+9. burp → manual testing
 </pre>
 </div>
-
 </div>
-
 </body>
 </html>

@@ -17,6 +17,16 @@ tiktok.com
 snapchat.com
 vk.com
 
+# Microsoft / identity redirects
+office365.com
+outlook.com
+microsoft.com
+live.com
+microsoftonline.com
+
+# Partner / app redirects (add per-project in scope/out-of-scope.txt too)
+appsclub.com
+
 # Google
 google.com
 youtube.com

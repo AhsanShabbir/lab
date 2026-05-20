@@ -66,8 +66,7 @@ apply_scope_filter() {
 filter_live_json() {
   [[ -f "$RECON_DIR/live.json" ]] || return 0
   command -v jq &>/dev/null || {
-    warn "jq not found — live.json not scope-filtered"
-    return 0
+    die "jq is required to scope-filter live.json. Install: brew install jq"
   }
 
   local blocklist allowed tmp

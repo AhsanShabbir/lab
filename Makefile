@@ -1,4 +1,4 @@
-.PHONY: setup doctor update project recon dashboard
+.PHONY: setup doctor update project recon recon-resume dashboard
 
 LAB_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -18,6 +18,10 @@ project:
 recon:
 	@test -n "$(TARGET)" || (echo "Usage: make recon TARGET=example.com" && exit 1)
 	./target --recon $(TARGET)
+
+recon-resume:
+	@test -n "$(TARGET)" || (echo "Usage: make recon-resume TARGET=example.com" && exit 1)
+	./target --recon --resume $(TARGET)
 
 dashboard:
 	./dashboard

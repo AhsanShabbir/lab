@@ -1,5 +1,39 @@
 # Sourced by scripts/run-recon.sh after LAB_ROOT is set
+
+# Fuzzing
 WORDLIST="${LAB_ROOT:-}/wordlists/common-dirs.txt"
-NUCLEI_SEVERITY="high,critical"
-HTTPX_RATE=150
 FFUF_THREADS=40
+
+# Subdomain discovery
+SUBFINDER_ALL=true
+# Set to false to skip the dns stage
+ENABLE_DNS_STAGE=true
+
+# Live probing
+HTTPX_RATE=150
+
+# Archive URLs (gau + waybackurls fallback)
+# (no extra knobs — uses subs.txt)
+
+# Live crawl (katana)
+KATANA_DEPTH=2
+KATANA_RATE_LIMIT=50
+CRAWL_MAX_HOSTS=30
+
+# URL list cap for nuclei pass 2
+URLS_SCAN_MAX=3000
+
+# Dual-pass nuclei
+NUCLEI_SEVERITY_LIVE=high,critical
+NUCLEI_SEVERITY_URLS=medium,high,critical
+NUCLEI_TAGS_URLS=cve,exposure,misconfig
+NUCLEI_RATE_LIMIT=100
+NUCLEI_CONCURRENCY=25
+NUCLEI_TIMEOUT=10m
+
+# SQL injection (sqlmap) — runs after scan, before summary
+ENABLE_SQLMAP_STAGE=true
+SQLMAP_MAX_URLS=50
+SQLMAP_THREADS=2
+SQLMAP_LEVEL=1
+SQLMAP_RISK=1

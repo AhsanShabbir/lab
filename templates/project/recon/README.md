@@ -18,6 +18,27 @@ Or from this directory:
 ../../scripts/run-recon.sh --target __TARGET__ --full
 ```
 
-Outputs: `subs.txt`, `live.txt`, `live.json`, `urls.txt`, `nuclei/`, `fuzz/` (with `--full`), `summary.md`, `run.log`
+## Pipeline stages
 
-Passive DNS noise (e.g. `twitter.com` under your target) is dropped automatically via scope filtering and `config/third-party-domains.txt`. Add project-specific exclusions in `../scope/out-of-scope.txt`.
+`subs` → `dns` → `live` → `urls` → `crawl` → `scan` → `sqli` → `summary` (optional: `fuzz` with `--full`)
+
+## Outputs
+
+| File | Stage |
+|------|--------|
+| `subs.txt` | subs |
+| `dns.json`, `dns.txt` | dns |
+| `live.txt`, `live.json` | live |
+| `urls-archive.txt` | urls |
+| `urls-live.txt` | crawl |
+| `urls-scan.txt` | scan (input for nuclei pass 2) |
+| `urls.txt` | merged archive + crawl |
+| `nuclei/results.jsonl` | scan (merged) |
+| `nuclei/results-live.jsonl`, `results-urls.jsonl` | scan |
+| `nuclei/summary.txt`, `summary-urls.txt` | scan |
+| `sqlmap/candidates.txt`, `vulnerable.txt`, `findings.json` | sqli |
+| `summary.md`, `run.log` | summary |
+
+Passive DNS noise is dropped via scope filtering and `config/third-party-domains.txt`. Add project-specific exclusions in `../scope/out-of-scope.txt`.
+
+Tune caps and nuclei settings in `~/lab/config/recon.defaults`.

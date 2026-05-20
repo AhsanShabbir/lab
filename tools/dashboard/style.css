@@ -129,6 +129,22 @@ body {
 .chip.live { color: var(--green); }
 .chip.nuc { color: var(--amber); }
 .chip.warn { color: var(--red); }
+.chip.sqli { color: var(--red); background: #3b1212; border: 1px solid var(--red); }
+
+.panel-sqli { border-color: #7f1d1d; }
+.sqli-alert { color: var(--red); font-weight: 600; margin: 0 0 12px; }
+.sqli-ok { color: var(--muted); margin: 0; }
+.sqli-list { display: flex; flex-direction: column; gap: 10px; }
+.sqli-hit {
+  padding: 10px 12px;
+  background: #1a0f0f;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+}
+.sqli-hit a { color: #fca5a5; word-break: break-all; }
+.sqli-meta { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+.sqli-meta code { color: var(--amber); }
+.sqli-inline { color: var(--red); }
 
 .detail {
   overflow-y: auto;
