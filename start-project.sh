@@ -1,9 +1,30 @@
 #!/bin/bash
 
-TARGET=$1
+RUN_RECON=false
+TARGET=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --recon)
+      RUN_RECON=true
+      ;;
+    -*)
+      echo "Unknown option: $arg"
+      echo "Usage: start-project.sh [--recon] <target-domain>"
+      exit 1
+      ;;
+    *)
+      if [ -n "$TARGET" ]; then
+        echo "Usage: start-project.sh [--recon] <target-domain>"
+        exit 1
+      fi
+      TARGET="$arg"
+      ;;
+  esac
+done
 
 if [ -z "$TARGET" ]; then
-  echo "Usage: start <target-domain>"
+  echo "Usage: start-project.sh [--recon] <target-domain>"
   exit 1
 fi
 
@@ -46,5 +67,12 @@ cat > "$BASE/reports/findings.md" <<EOF
 EOF
 
 echo "[+] Project created at $BASE"
-echo "[+] Next step:"
-echo "cd $BASE/recon && bash commands.sh"
+
+if [ "$RUN_RECON" = true ]; then
+  echo "[+] Running recon..."
+  (cd "$BASE/recon" && bash commands.sh)
+else
+  echo "[+] Next step:"
+  echo "cd $BASE/recon && bash commands.sh"
+  echo "Or re-run with: start-project.sh --recon $TARGET"
+fi
