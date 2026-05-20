@@ -2,6 +2,10 @@
 
 LAB_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# shellcheck source=scripts/lib/paths.sh
+source "$LAB_ROOT/scripts/lib/paths.sh"
+ensure_lab_path
+
 RUN_RECON=false
 FULL=false
 RESUME=false
@@ -108,9 +112,11 @@ RECON_ARGS=(--target "$TARGET")
 [[ "$FULL" == true ]] && RECON_ARGS+=(--full)
 [[ "$RESUME" == true ]] && RECON_ARGS+=(--resume)
 [[ -n "$ONLY_STAGE" ]] && RECON_ARGS+=(--only "$ONLY_STAGE")
-for s in "${SKIP_STAGES[@]}"; do
-  RECON_ARGS+=(--skip "$s")
-done
+if ((${#SKIP_STAGES[@]} > 0)); then
+  for s in "${SKIP_STAGES[@]}"; do
+    RECON_ARGS+=(--skip "$s")
+  done
+fi
 
 echo "[+] Running recon pipeline..."
 (cd "$BASE/recon" && "$LAB_ROOT/scripts/run-recon.sh" "${RECON_ARGS[@]}")

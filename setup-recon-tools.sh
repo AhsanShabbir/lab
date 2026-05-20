@@ -2,6 +2,10 @@
 # Install pentest recon tools listed in tools/dashboard/recon.html
 set -euo pipefail
 
+LAB_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=scripts/lib/paths.sh
+source "$LAB_ROOT/scripts/lib/paths.sh"
+
 GO_TOOLS=(
   "github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
   "github.com/tomnomnom/assetfinder@latest"
@@ -19,22 +23,13 @@ log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
 die() { echo "[-] $*" >&2; exit 1; }
 
-ensure_path() {
-  local go_bin="${GOPATH:-$HOME/go}/bin"
-  if [[ ":$PATH:" != *":$go_bin:"* ]]; then
-    export PATH="$go_bin:$PATH"
-    warn "Added $go_bin to PATH for this session."
-    warn "Add to your shell profile: export PATH=\"\$HOME/go/bin:\$PATH\""
-  fi
-}
-
 check_prereqs() {
   command -v brew >/dev/null 2>&1 || die "Homebrew is required. Install from https://brew.sh"
   command -v go >/dev/null 2>&1 || {
     log "Go not found; installing via Homebrew..."
     brew install go
   }
-  ensure_path
+  ensure_lab_path
 }
 
 install_go_tools() {
@@ -105,6 +100,8 @@ main() {
   update_nuclei_templates
   verify_tools
   log "Setup complete. Open tools/dashboard/recon.html for command reference."
+  log "Permanent PATH fix — add to ~/.zshrc:"
+  echo "  source $LAB_ROOT/config/shell-path.sh"
 }
 
 main "$@"

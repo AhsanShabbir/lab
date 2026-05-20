@@ -3,23 +3,18 @@ set -euo pipefail
 
 LAB_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# shellcheck source=../scripts/lib/paths.sh
+source "$LAB_ROOT/scripts/lib/paths.sh"
+
 REQUIRED_BINS=(subfinder assetfinder httpx waybackurls ffuf nuclei)
 OPTIONAL_BINS=(jq go brew)
 
 log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
 
-ensure_go_path() {
-  local go_bin="${GOPATH:-$HOME/go}/bin"
-  if [[ ":$PATH:" != *":$go_bin:"* ]]; then
-    export PATH="$go_bin:$PATH"
-    warn "Added $go_bin to PATH for this check"
-  fi
-}
-
 main() {
   log "Lab root: $LAB_ROOT"
-  ensure_go_path
+  ensure_lab_path
 
   local missing=()
   for bin in "${REQUIRED_BINS[@]}"; do

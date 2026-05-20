@@ -5,6 +5,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LAB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
+ensure_lab_path
+
 # shellcheck source=config/recon.defaults
 source "$LAB_ROOT/config/recon.defaults"
 
@@ -95,20 +99,25 @@ check_bins() {
 
   for stage in "${stages_to_check[@]}"; do
     for bin in $(bins_for_stage "$stage"); do
-      [[ " ${seen[*]} " == *" $bin "* ]] && continue
+      local x already=0
+      for x in "${seen[@]+"${seen[@]}"}"; do
+        [[ "$x" == "$bin" ]] && already=1 && break
+      done
+      ((already)) && continue
       seen+=("$bin")
       command -v "$bin" &>/dev/null || missing+=("$bin")
     done
   done
 
   if ((${#missing[@]} > 0)); then
-    die "Missing tools: ${missing[*]}. Run: $LAB_ROOT/setup-recon-tools.sh"
+    die "Missing tools: ${missing[*]}. Run: $LAB_ROOT/setup-recon-tools.sh — then: source $LAB_ROOT/config/shell-path.sh (add to ~/.zshrc)"
   fi
 }
 
 stage_skipped() {
   local stage="$1"
   local s
+  ((${#SKIP_STAGES[@]} == 0)) && return 1
   for s in "${SKIP_STAGES[@]}"; do
     [[ "$s" == "$stage" ]] && return 0
   done
