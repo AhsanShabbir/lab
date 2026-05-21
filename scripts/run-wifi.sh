@@ -26,6 +26,7 @@ ONLY_STAGE=""
 FULL=false
 RESUME=false
 REQUIRE_CAPTURE=false
+ONLY_ALLOWLIST=false
 RUN_SCAN=false
 RUN_CRACK=false
 declare -a SKIP_STAGES=()
@@ -51,6 +52,7 @@ Options:
   --full              scan → capture → crack → report
   --resume            Skip stage if primary output exists
   --require-capture   Fail capture stage if no inbox file
+  --only-allowlist    Require target in config/wifi-allowlist.txt (default: off)
 
 Run from: <project>/wifi/
 EOF
@@ -69,6 +71,7 @@ while [[ $# -gt 0 ]]; do
     --full) FULL=true; shift ;;
     --resume) RESUME=true; shift ;;
     --require-capture) REQUIRE_CAPTURE=true; shift ;;
+    --only-allowlist) ONLY_ALLOWLIST=true; shift ;;
     -h|--help) usage ;;
     *) die "Unknown option: $1" ;;
   esac
@@ -148,7 +151,7 @@ resolve_selection() {
     return 0
   fi
 
-  # Default: first allowlisted network in scan results
+  # Default: first network (or first allowlisted when --only-allowlist)
   if command -v jq &>/dev/null; then
     local i count
     count="$(jq 'length' "$json")"
@@ -156,12 +159,17 @@ resolve_selection() {
       local ssid bssid
       ssid="$(jq -r ".[$i].ssid // empty" "$json")"
       bssid="$(jq -r ".[$i].bssid // empty" "$json")"
-      if wifi_allowlisted "$ssid" "$bssid"; then
+      if [[ "${ONLY_ALLOWLIST:-false}" == "true" ]]; then
+        wifi_allowlisted "$ssid" "$bssid" || continue
         SELECTED_SSID="$ssid"
         SELECTED_BSSID="$bssid"
         log "Auto-selected allowlisted: $ssid ($bssid)"
         return 0
       fi
+      SELECTED_SSID="$ssid"
+      SELECTED_BSSID="$bssid"
+      log "Auto-selected: $ssid ($bssid)"
+      return 0
     done
   fi
   die "No target selected. Use --target N, --ssid, or --bssid after scan"
@@ -242,7 +250,7 @@ stage_scan() {
 
 stage_capture() {
   resolve_selection
-  wifi_require_allowlisted "$SELECTED_SSID" "$SELECTED_BSSID" || die "Capture blocked by allowlist"
+  wifi_enforce_allowlist "$SELECTED_SSID" "$SELECTED_BSSID" || die "Capture blocked by allowlist"
 
   if should_skip_resume "$WIFI_DIR/crack/handshake.22000"; then
     warn "Resume: skipping capture (handshake.22000 exists)"
@@ -286,7 +294,7 @@ stage_capture() {
 
 stage_crack() {
   resolve_selection
-  wifi_require_allowlisted "$SELECTED_SSID" "$SELECTED_BSSID" || die "Crack blocked by allowlist"
+  wifi_enforce_allowlist "$SELECTED_SSID" "$SELECTED_BSSID" || die "Crack blocked by allowlist"
 
   if should_skip_resume "$WIFI_DIR/crack/result.txt"; then
     warn "Resume: skipping crack (result.txt exists)"

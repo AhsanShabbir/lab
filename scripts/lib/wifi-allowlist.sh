@@ -6,7 +6,14 @@ wifi_normalize_bssid() {
 }
 
 wifi_normalize_ssid() {
-  echo "$1" | tr '[:upper:]' '[:lower:]'
+  echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
+# True if string looks like a MAC (with or without colons), not an SSID
+wifi_looks_like_bssid() {
+  local s
+  s="$(wifi_normalize_bssid "$1")"
+  [[ ${#s} -eq 12 ]] && [[ "$s" =~ ^[0-9a-f]{12}$ ]]
 }
 
 # Returns 0 if ssid or bssid matches allowlist
@@ -25,11 +32,11 @@ wifi_allowlisted() {
     line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
     [[ -z "$line" ]] && continue
 
-    norm_line="$(wifi_normalize_ssid "$line")"
-    if [[ "$norm_line" == *:* ]] || [[ ${#norm_line} -eq 12 ]]; then
+    if wifi_looks_like_bssid "$line"; then
       norm_line="$(wifi_normalize_bssid "$line")"
       [[ -n "$norm_bssid" && "$norm_line" == "$norm_bssid" ]] && return 0
     else
+      norm_line="$(wifi_normalize_ssid "$line")"
       [[ -n "$norm_ssid" && "$norm_line" == "$norm_ssid" ]] && return 0
     fi
   done < "$list"
@@ -45,4 +52,14 @@ wifi_require_allowlisted() {
   echo "[-] Target not on allowlist ($WIFI_ALLOWLIST): SSID=${ssid:-?} BSSID=${bssid:-?}" >&2
   echo "[-] Add your lab SSID or BSSID to config/wifi-allowlist.txt" >&2
   return 1
+}
+
+# Enforce allowlist only when ONLY_ALLOWLIST=true (set by --only-allowlist)
+wifi_enforce_allowlist() {
+  local ssid="${1:-}" bssid="${2:-}"
+  if [[ "${ONLY_ALLOWLIST:-false}" == "true" ]]; then
+    wifi_require_allowlisted "$ssid" "$bssid"
+    return $?
+  fi
+  return 0
 }

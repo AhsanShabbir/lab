@@ -1,6 +1,8 @@
-# Lab SSIDs or BSSIDs only (one per line). Capture/crack refuse targets not listed here.
+# Lab SSIDs or BSSIDs (one per line). Enforced only when you pass --only-allowlist.
 # Examples:
 # Lab-WPA2
 # aa:bb:cc:dd:ee:01
 
 Lab-WPA2
+Ahmed-Router
+Home Network
