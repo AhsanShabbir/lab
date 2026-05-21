@@ -12,6 +12,12 @@ ENABLE_DNS_STAGE=true
 # Live probing
 HTTPX_RATE=150
 
+# Network (naabu port scan) — runs after live, before urls
+ENABLE_NETWORK_STAGE=true
+NETWORK_MAX_HOSTS=50
+NAABU_TOP_PORTS=1000
+NAABU_RATE=1000
+
 # Archive URLs (gau + waybackurls fallback)
 # (no extra knobs — uses subs.txt)
 

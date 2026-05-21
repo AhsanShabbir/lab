@@ -1,0 +1,90 @@
+#!/bin/bash
+
+LAB_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+# shellcheck source=scripts/lib/paths.sh
+source "$LAB_ROOT/scripts/lib/paths.sh"
+ensure_lab_path
+
+# shellcheck source=config/wifi.defaults
+source "$LAB_ROOT/config/wifi.defaults"
+
+PROJECT="${WIFI_PROJECT:-wifi-lab}"
+declare -a WIFI_ARGS=()
+
+usage() {
+  cat <<EOF
+Usage: wifi [options]
+
+WiFi lab pipeline (Mac-first). Only allowlisted SSIDs/BSSIDs may be captured/cracked.
+Edit: config/wifi-allowlist.txt
+
+Options (passed to run-wifi.sh):
+  --scan              List nearby networks
+  --target <N>        Select network # from last scan
+  --ssid <name>       Select by SSID
+  --bssid <mac>       Select by BSSID
+  --only <stage>      scan|capture|crack|report
+  --full              scan → capture → crack → report
+  --crack             Run crack (+ report)
+  --resume            Skip stages with existing output
+  --require-capture   Fail if capture/inbox/ is empty
+
+Examples:
+  ./wifi --scan
+  ./wifi --target 1 --only capture
+  ./wifi --target 1 --crack
+  ./wifi --ssid Lab-WPA2 --full
+
+Setup: ./setup-wifi-tools.sh
+EOF
+  exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help) usage ;;
+    --project)
+      PROJECT="${2:-}"
+      shift 2
+      ;;
+    *)
+      WIFI_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# Default: scan when no args
+if ((${#WIFI_ARGS[@]} == 0)); then
+  WIFI_ARGS=(--scan)
+fi
+
+BASE="$LAB_ROOT/projects/$PROJECT"
+WIFI_WORK="$BASE/wifi"
+
+echo "[+] WiFi lab project: $PROJECT"
+
+mkdir -p "$WIFI_WORK"/{scan,capture/inbox,crack,report}
+
+if [[ ! -e "$BASE/wordlists" ]]; then
+  ln -sf "$LAB_ROOT/wordlists" "$BASE/wordlists"
+fi
+
+if [[ ! -f "$BASE/meta.json" ]]; then
+  mkdir -p "$BASE"
+  cat >"$BASE/meta.json" <<META
+{
+  "target": "$PROJECT",
+  "created": "$(date -u +"%Y-%m-%d")",
+  "engagement": "wifi-lab"
+}
+META
+fi
+
+if [[ -f "$LAB_ROOT/templates/project/wifi/README.md" && ! -f "$WIFI_WORK/README.md" ]]; then
+  cp "$LAB_ROOT/templates/project/wifi/README.md" "$WIFI_WORK/README.md"
+fi
+
+echo "[+] Working directory: $WIFI_WORK"
+(cd "$WIFI_WORK" && "$LAB_ROOT/scripts/run-wifi.sh" "${WIFI_ARGS[@]}")

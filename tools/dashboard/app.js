@@ -72,6 +72,7 @@ function renderProjectList(filter = "") {
     .map((p) => {
       const r = p.recon || {};
       const nuc = r.nuclei?.total || 0;
+      const openPorts = r.network?.openPorts ?? 0;
       const active = p.id === selectedId ? " active" : "";
       return `
         <button type="button" class="project-card${active}" data-id="${escapeAttr(p.id)}">
@@ -80,6 +81,7 @@ function renderProjectList(filter = "") {
           <div class="stats-row">
             <span class="chip live">${r.live ?? 0} live</span>
             <span class="chip">${r.subs ?? 0} subs</span>
+            ${openPorts ? `<span class="chip">${openPorts} ports</span>` : ""}
             ${nuc ? `<span class="chip nuc warn">${nuc} nuclei</span>` : ""}
             ${(r.sqli?.total || 0) > 0 ? `<span class="chip sqli">${r.sqli.total} sqli</span>` : ""}
           </div>
@@ -199,6 +201,7 @@ function renderTabContent(p) {
           <div class="metric-grid">
             ${metric("Subdomains", r.subs)}
             ${metric("Live hosts", r.live)}
+            ${metric("Open ports", r.network?.openPorts ?? 0)}
             ${metric("URLs", r.urls)}
             ${metric("Nuclei", r.nuclei?.total ?? 0)}
           </div>
@@ -215,6 +218,10 @@ function renderTabContent(p) {
         <div class="panel">
           <h3>Live hosts (preview)</h3>
           <div class="host-list">${(p.liveHosts || []).map((h) => `<div>${escapeHtml(h)}</div>`).join("") || '<span class="empty">No live hosts yet.</span>'}</div>
+        </div>
+        <div class="panel">
+          <h3>Open ports (preview)</h3>
+          <div class="host-list">${(p.openPortsPreview || []).map((h) => `<div>${escapeHtml(h)}</div>`).join("") || '<span class="empty">No open ports yet (network stage).</span>'}</div>
         </div>
         <div class="panel">
           <h3>Pipeline log</h3>
@@ -264,6 +271,7 @@ function renderTabContent(p) {
           <div class="metric-grid">
             ${metric("Subdomains", r.subs)}
             ${metric("Live hosts", r.live)}
+            ${metric("Open ports", r.network?.openPorts ?? 0)}
             ${metric("URLs", r.urls)}
             ${metric("Nuclei", r.nuclei?.total ?? 0)}
             ${metric("SQLi", r.sqli?.total ?? 0)}

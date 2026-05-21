@@ -1,0 +1,6 @@
+password
+Password1
+LabPassword123
+wifi12345678
+changeme
+admin123

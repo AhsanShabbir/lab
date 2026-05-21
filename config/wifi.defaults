@@ -1,0 +1,13 @@
+# Sourced by scripts/run-wifi.sh after LAB_ROOT is set
+
+WIFI_PROJECT="wifi-lab"
+WIFI_ALLOWLIST="${LAB_ROOT:-}/config/wifi-allowlist.txt"
+WORDLIST="${LAB_ROOT:-}/wordlists/wifi-common.txt"
+HASHCAT_MODE=22000
+CAPTURE_INBOX="capture/inbox"
+HASHCAT_WORKLOAD=3
+CAPTURE_TIMEOUT=120
+
+# Phase 2: remote Linux capture (leave empty for Mac-only manual capture)
+# WIFI_HOST="kali@192.168.64.2"
+# WIFI_IFACE="wlan0"

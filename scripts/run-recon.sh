@@ -25,7 +25,7 @@ FULL=false
 RESUME=false
 declare -a SKIP_STAGES=()
 
-ALL_STAGES=(subs dns live urls crawl fuzz scan sqli summary)
+ALL_STAGES=(subs dns live network urls crawl fuzz scan sqli summary)
 
 log() { echo "[+] $*" | tee -a "$LOG_FILE"; }
 warn() { echo "[!] $*" | tee -a "$LOG_FILE" >&2; }
@@ -37,7 +37,7 @@ Usage: run-recon.sh [options]
 
 Options:
   --target <domain>   Target domain (or set in ../meta.json)
-  --only <stage>      Run single stage: subs|dns|live|urls|crawl|fuzz|scan|sqli|summary
+  --only <stage>      Run single stage: subs|dns|live|network|urls|crawl|fuzz|scan|sqli|summary
   --skip <stage>      Skip stage (repeatable)
   --full              Include fuzz stage
   --resume            Skip stage if primary output exists and is non-empty
@@ -82,6 +82,7 @@ bins_for_stage() {
     subs) echo "subfinder assetfinder" ;;
     dns) echo "dnsx" ;;
     live) echo "httpx jq" ;;
+    network) echo "naabu jq" ;;
     urls) echo "gau waybackurls" ;;
     crawl) echo "katana" ;;
     fuzz) echo "ffuf" ;;
@@ -136,6 +137,9 @@ stage_enabled() {
     return 1
   fi
   if [[ "$stage" == "dns" ]] && [[ "${ENABLE_DNS_STAGE:-true}" != "true" ]]; then
+    return 1
+  fi
+  if [[ "$stage" == "network" ]] && [[ "${ENABLE_NETWORK_STAGE:-true}" != "true" ]]; then
     return 1
   fi
   if [[ "$stage" == "sqli" ]] && [[ "${ENABLE_SQLMAP_STAGE:-true}" != "true" ]]; then
@@ -226,6 +230,59 @@ stage_live() {
   fi
   filter_live_outputs
   log "Live hosts: $(wc -l < "$RECON_DIR/live.txt" | tr -d ' ')"
+}
+
+stage_network() {
+  local net_dir="$RECON_DIR/network"
+  local hosts_file="$net_dir/hosts.txt"
+  local naabu_json="$net_dir/naabu.json"
+  local open_ports="$net_dir/open-ports.txt"
+  local hosts_with_ports="$net_dir/hosts-with-ports.txt"
+
+  if should_skip_resume "$open_ports"; then
+    warn "Resume: skipping network (open-ports.txt exists)"
+    return
+  fi
+
+  [[ -s "$RECON_DIR/subs.txt" ]] || die "subs.txt empty — run subs stage first"
+
+  mkdir -p "$net_dir"
+  head -n "${NETWORK_MAX_HOSTS:-50}" "$RECON_DIR/subs.txt" > "$hosts_file"
+  apply_scope_filter "network hosts" "$hosts_file" host
+
+  if [[ ! -s "$hosts_file" ]]; then
+    warn "No hosts for network scan after scope filter — skipping network stage"
+    : > "$open_ports"
+    : > "$hosts_with_ports"
+    return
+  fi
+
+  require_jq
+  log "Port scan (naabu): $(wc -l < "$hosts_file" | tr -d ' ') host(s), top ${NAABU_TOP_PORTS:-1000} ports"
+  local rc=0
+  naabu -list "$hosts_file" -json -o "$naabu_json" \
+    -top-ports "${NAABU_TOP_PORTS:-1000}" -rate "${NAABU_RATE:-1000}" -silent 2>/dev/null || rc=$?
+  if ((rc != 0)); then
+    warn "naabu exited $rc"
+  fi
+
+  : > "$open_ports"
+  : > "$hosts_with_ports"
+  if [[ -f "$naabu_json" && -s "$naabu_json" ]]; then
+    jq -r 'select(.host != null and .port != null) | "\(.host):\(.port)"' "$naabu_json" 2>/dev/null \
+      | sed '/^$/d' | sort -u > "$open_ports" || : > "$open_ports"
+    jq -r 'select(.host != null and .port != null) | .host' "$naabu_json" 2>/dev/null \
+      | sed '/^$/d' | sort -u > "$hosts_with_ports" || : > "$hosts_with_ports"
+  fi
+
+  if [[ -s "$open_ports" ]]; then
+    apply_scope_filter "open ports" "$open_ports" host
+    cut -d: -f1 "$open_ports" | sort -u > "$hosts_with_ports"
+  else
+    warn "No open ports found (or naabu produced no parseable JSON)"
+  fi
+
+  log "Open ports: $(wc -l < "$open_ports" | tr -d ' ') (hosts with ports: $(wc -l < "$hosts_with_ports" | tr -d ' '))"
 }
 
 stage_urls() {
@@ -617,10 +674,28 @@ httpx_status_summary() {
   jq -rs '[.[] | .status_code // empty] | group_by(.) | map({code: .[0], count: length}) | .[] | "\(.code): \(.count)"' "$json" 2>/dev/null | head -10
 }
 
+network_top_ports_section() {
+  local json="$RECON_DIR/network/naabu.json"
+  if [[ ! -f "$json" || ! -s "$json" ]]; then
+    echo "_Network stage not run or no naabu output._"
+    return
+  fi
+  require_jq
+  jq -rs '
+    [.[] | select(.port != null) | .port | tonumber] |
+    group_by(.) | map({port: .[0], count: length}) |
+    sort_by(-.count) | .[:10][] |
+    "- Port \(.port): \(.count) host(s)"
+  ' "$json" 2>/dev/null || echo "(could not parse naabu.json for port stats)"
+}
+
 stage_summary() {
-  local subs live urls archive crawl scan_urls sqli_cand sqli_vuln nuc_line total crit high medium low info
+  local subs live net_hosts net_ports net_hosts_open urls archive crawl scan_urls sqli_cand sqli_vuln nuc_line total crit high medium low info
   subs="$(count_lines "$RECON_DIR/subs.txt")"
   live="$(count_lines "$RECON_DIR/live.txt")"
+  net_hosts="$(count_lines "$RECON_DIR/network/hosts.txt")"
+  net_ports="$(count_lines "$RECON_DIR/network/open-ports.txt")"
+  net_hosts_open="$(count_lines "$RECON_DIR/network/hosts-with-ports.txt")"
   urls="$(count_lines "$RECON_DIR/urls.txt")"
   archive="$(count_lines "$RECON_DIR/urls-archive.txt")"
   crawl="$(count_lines "$RECON_DIR/urls-live.txt")"
@@ -629,9 +704,10 @@ stage_summary() {
   sqli_vuln="$(count_lines "$RECON_DIR/sqlmap/vulnerable.txt")"
   read -r total crit high medium low info <<< "$(nuclei_severity_counts)"
 
-  local generated sqli_block
+  local generated sqli_block net_ports_block
   generated="$(date -u +"%Y-%m-%d %H:%M UTC")"
   sqli_block="$(sqli_summary_section)"
+  net_ports_block="$(network_top_ports_section)"
 
   cat > "$RECON_DIR/summary.md" <<EOF
 # Recon Summary — $TARGET
@@ -642,6 +718,9 @@ Generated: $generated
 
 - Subdomains: $subs
 - Live hosts: $live
+- Network hosts scanned: $net_hosts
+- Open ports (host:port): $net_ports
+- Hosts with open ports: $net_hosts_open
 - Archive URLs: $archive
 - Crawl URLs (live): $crawl
 - Merged URLs (urls.txt): $urls
@@ -649,6 +728,10 @@ Generated: $generated
 - Nuclei findings: $total (critical: $crit, high: $high, medium: $medium, low: $low, info: $info)
 - SQLmap candidates tested: $sqli_cand
 - **SQL injection (sqlmap): $sqli_vuln potentially vulnerable**
+
+## Network (naabu)
+
+$net_ports_block
 
 ## SQL injection (sqlmap)
 
@@ -662,6 +745,7 @@ $(httpx_status_summary)
 
 - \`subs.txt\`, \`dns.json\`, \`dns.txt\`
 - \`live.txt\`, \`live.json\`
+- \`network/hosts.txt\`, \`network/naabu.json\`, \`network/open-ports.txt\`, \`network/hosts-with-ports.txt\`
 - \`urls-archive.txt\`, \`urls-live.txt\`, \`urls-scan.txt\`, \`urls.txt\`
 - \`nuclei/results.jsonl\` (merged), \`results-live.jsonl\`, \`results-urls.jsonl\`
 - \`nuclei/summary.txt\`, \`nuclei/summary-urls.txt\`
@@ -672,9 +756,10 @@ $(httpx_status_summary)
 ## Next steps
 
 1. Manual Burp testing using \`live.txt\`
-2. Review nuclei results in \`nuclei/\`
-3. **Confirm sqlmap hits** in \`sqlmap/vulnerable.txt\` before reporting
-4. Optional: \`../../scripts/run-recon.sh --target $TARGET --full\` for ffuf
+2. Review open ports in \`network/open-ports.txt\`
+3. Review nuclei results in \`nuclei/\`
+4. **Confirm sqlmap hits** in \`sqlmap/vulnerable.txt\` before reporting
+5. Optional: \`../../scripts/run-recon.sh --target $TARGET --full\` for ffuf
 EOF
 
   local notes="$PROJECT_DIR/notes/README.md"
@@ -705,7 +790,7 @@ main() {
   log "WISE lab root: $LAB_ROOT"
   log "Recon dir: $RECON_DIR"
 
-  local valid_stages="subs dns live urls crawl fuzz scan sqli summary"
+  local valid_stages="subs dns live network urls crawl fuzz scan sqli summary"
 
   if [[ -n "$ONLY_STAGE" ]]; then
     case " $valid_stages " in

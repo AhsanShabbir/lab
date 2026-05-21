@@ -60,8 +60,8 @@ make recon TARGET=example.com
 Stages run in order:
 
 ```
-subs → dns → live → urls → crawl → scan → sqli → summary
-                              ↘ fuzz (optional, only with --full)
+subs → dns → live → network → urls → crawl → scan → sqli → summary
+                                        ↘ fuzz (optional, only with --full)
 ```
 
 | Stage | Output | Requires |
@@ -69,6 +69,7 @@ subs → dns → live → urls → crawl → scan → sqli → summary
 | `subs` | `subs.txt` | — (subfinder -all, assetfinder, findomain) |
 | `dns` | `dns.json`, `dns.txt` | `subs.txt` (skip if `ENABLE_DNS_STAGE=false`) |
 | `live` | `live.txt`, `live.json` | `subs.txt` |
+| `network` | `network/open-ports.txt`, `network/naabu.json`, … | `subs.txt` (skip if `ENABLE_NETWORK_STAGE=false`) |
 | `urls` | `urls-archive.txt` | `subs.txt` (gau + waybackurls) |
 | `crawl` | `urls-live.txt`, `urls.txt` | `live.txt` (katana, capped hosts) |
 | `fuzz` | `fuzz/*.json` | `live.txt` and `--full` |
@@ -80,7 +81,9 @@ subs → dns → live → urls → crawl → scan → sqli → summary
 
 **SQLmap (`sqli` stage):** tests up to `SQLMAP_MAX_URLS` parameterized URLs (`--smart`, level/risk from config). Hits are listed in `summary.md` and highlighted in the dashboard. Set `ENABLE_SQLMAP_STAGE=false` to skip. Requires `sqlmap` (`brew install sqlmap`).
 
-Tune caps and scanners in `config/recon.defaults` (`CRAWL_MAX_HOSTS`, `URLS_SCAN_MAX`, `NUCLEI_*`, `SQLMAP_*`, etc.).
+**Network (`network` stage):** naabu port scan on capped `subs.txt` hosts (`NETWORK_MAX_HOSTS`, `NAABU_TOP_PORTS`, `NAABU_RATE`). Only run port scans against assets in written scope; use `--skip network` on CDN-heavy or rate-sensitive targets.
+
+Tune caps and scanners in `config/recon.defaults` (`NETWORK_MAX_HOSTS`, `CRAWL_MAX_HOSTS`, `URLS_SCAN_MAX`, `NUCLEI_*`, `SQLMAP_*`, etc.).
 
 Run from the project recon directory:
 
@@ -147,6 +150,7 @@ To refresh only one stage, delete its output file(s), then use `--resume` so oth
 
 - Re-scan: `rm nuclei/results.jsonl nuclei/results-live.jsonl nuclei/results-urls.jsonl` then `--only scan` or `--resume`
 - Re-fetch subs: `rm subs.txt` (and usually `live.txt`, `urls-archive.txt`, `urls-live.txt` if you want those refreshed too)
+- Re-port-scan: `rm network/open-ports.txt` then `--only network` or `--resume`
 - Re-crawl only: `rm urls-live.txt` then `--only crawl --resume`
 
 ### Directory fuzzing (ffuf)
@@ -206,7 +210,7 @@ The recon toolkit command reference is linked from the dashboard (`tools/dashboa
 | View projects | `./dashboard` |
 | Watch pipeline | `tail -f projects/<domain>/recon/run.log` |
 
-**Stages:** `subs` | `dns` | `live` | `urls` | `crawl` | `fuzz` | `scan` | `sqli` | `summary`
+**Stages:** `subs` | `dns` | `live` | `network` | `urls` | `crawl` | `fuzz` | `scan` | `sqli` | `summary`
 
 **Skip stages:** `--skip <stage>` (repeatable)
 

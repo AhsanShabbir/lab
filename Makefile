@@ -1,9 +1,12 @@
-.PHONY: setup doctor update project recon recon-resume dashboard
+.PHONY: setup setup-wifi doctor update project recon recon-resume dashboard wifi-scan wifi-lab
 
 LAB_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 setup:
 	./setup-recon-tools.sh
+
+setup-wifi:
+	./setup-wifi-tools.sh
 
 doctor:
 	./tools/doctor.sh
@@ -25,3 +28,9 @@ recon-resume:
 
 dashboard:
 	./dashboard
+
+wifi-scan:
+	./wifi --scan
+
+wifi-lab:
+	./wifi --full

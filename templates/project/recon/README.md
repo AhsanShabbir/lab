@@ -20,7 +20,7 @@ Or from this directory:
 
 ## Pipeline stages
 
-`subs` → `dns` → `live` → `urls` → `crawl` → `scan` → `sqli` → `summary` (optional: `fuzz` with `--full`)
+`subs` → `dns` → `live` → `network` → `urls` → `crawl` → `scan` → `sqli` → `summary` (optional: `fuzz` with `--full`)
 
 ## Outputs
 
@@ -29,6 +29,7 @@ Or from this directory:
 | `subs.txt` | subs |
 | `dns.json`, `dns.txt` | dns |
 | `live.txt`, `live.json` | live |
+| `network/hosts.txt`, `network/naabu.json`, `network/open-ports.txt`, `network/hosts-with-ports.txt` | network |
 | `urls-archive.txt` | urls |
 | `urls-live.txt` | crawl |
 | `urls-scan.txt` | scan (input for nuclei pass 2) |

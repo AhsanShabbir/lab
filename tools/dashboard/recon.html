@@ -54,7 +54,7 @@ window.onload = updateAll;
 
 <div class="card">
 <h2>Automated pipeline</h2>
-<p>Default: <code>subs → dns → live → urls → crawl → scan → sqli → summary</code>. Ffuf with <code>--full</code>.</p>
+<p>Default: <code>subs → dns → live → network → urls → crawl → scan → sqli → summary</code>. Ffuf with <code>--full</code>. Skip ports: <code>--skip network</code>.</p>
 <pre id="pipe1" data-template="./target --recon example.com"></pre>
 <button onclick="copyCode('pipe1')">Copy</button>
 <pre id="pipe2" data-template="./target --recon --full example.com"></pre>
@@ -97,7 +97,14 @@ brew install findomain</pre></details>
 </div>
 
 <div class="card">
-<h2>5. gau / waybackurls</h2>
+<h2>5. naabu (port scan)</h2>
+<pre id="naabu1" data-template="naabu -list network/hosts.txt -json -o network/naabu.json -top-ports 1000 -rate 1000 -silent"></pre>
+<button onclick="copyCode('naabu1')">Copy</button>
+<details><summary>Install</summary><pre>go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest</pre></details>
+</div>
+
+<div class="card">
+<h2>6. gau / waybackurls</h2>
 <pre id="gau1" data-template="gau --subs example.com"></pre>
 <button onclick="copyCode('gau1')">Copy</button>
 <pre id="way1" data-template="echo example.com | waybackurls"></pre>
@@ -107,21 +114,21 @@ go install github.com/tomnomnom/waybackurls@latest</pre></details>
 </div>
 
 <div class="card">
-<h2>6. katana</h2>
+<h2>7. katana</h2>
 <pre id="kat1" data-template="katana -list live.txt -depth 2 -rate-limit 50 -silent -o urls-live.txt"></pre>
 <button onclick="copyCode('kat1')">Copy</button>
 <details><summary>Install</summary><pre>go install github.com/projectdiscovery/katana/cmd/katana@latest</pre></details>
 </div>
 
 <div class="card">
-<h2>7. ffuf</h2>
+<h2>8. ffuf</h2>
 <pre id="ffuf1" data-template="ffuf -u https://example.com/FUZZ -w wordlist.txt"></pre>
 <button onclick="copyCode('ffuf1')">Copy</button>
 <details><summary>Install</summary><pre>brew install ffuf</pre></details>
 </div>
 
 <div class="card">
-<h2>8. Nuclei (dual pass)</h2>
+<h2>9. Nuclei (dual pass)</h2>
 <pre id="nuc1" data-template="nuclei -l live.txt -severity high,critical -jsonl-export results-live.jsonl"></pre>
 <button onclick="copyCode('nuc1')">Copy</button>
 <pre id="nuc2" data-template="nuclei -l urls-scan.txt -severity medium,high,critical -tags cve,exposure,misconfig -jsonl-export results-urls.jsonl"></pre>
@@ -130,14 +137,14 @@ go install github.com/tomnomnom/waybackurls@latest</pre></details>
 </div>
 
 <div class="card">
-<h2>9. sqlmap</h2>
+<h2>10. sqlmap</h2>
 <pre id="sql1" data-template="sqlmap -m sqlmap/candidates.txt --batch --smart --output-dir=sqlmap/output"></pre>
 <button onclick="copyCode('sql1')">Copy</button>
 <details><summary>Install</summary><pre>brew install sqlmap</pre></details>
 </div>
 
 <div class="card">
-<h2>10. Burp Suite</h2>
+<h2>11. Burp Suite</h2>
 <p>Manual testing via proxy interception.</p>
 <details><summary>Install</summary><pre>brew install --cask burp-suite</pre></details>
 </div>
@@ -148,12 +155,13 @@ go install github.com/tomnomnom/waybackurls@latest</pre></details>
 1. subfinder / assetfinder / findomain → subs.txt
 2. dnsx → dns.json
 3. httpx → live.txt
-4. gau + waybackurls → urls-archive.txt
-5. katana → urls-live.txt → urls.txt
-6. nuclei (live + urls-scan) → results.jsonl
-7. sqlmap → sqlmap/vulnerable.txt (highlighted in dashboard)
-8. optional ffuf → fuzz/
-9. burp → manual testing
+4. naabu → network/open-ports.txt
+5. gau + waybackurls → urls-archive.txt
+6. katana → urls-live.txt → urls.txt
+7. nuclei (live + urls-scan) → results.jsonl
+8. sqlmap → sqlmap/vulnerable.txt (highlighted in dashboard)
+9. optional ffuf → fuzz/
+10. burp → manual testing
 </pre>
 </div>
 </div>

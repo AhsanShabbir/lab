@@ -12,6 +12,7 @@ GO_TOOLS=(
   "github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
   "github.com/projectdiscovery/katana/cmd/katana@latest"
   "github.com/lc/gau/v2/cmd/gau@latest"
+  "github.com/projectdiscovery/naabu/v2/cmd/naabu@latest"
 )
 
 log() { echo "[+] $*"; }

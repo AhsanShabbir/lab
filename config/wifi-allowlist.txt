@@ -1,0 +1,6 @@
+# Lab SSIDs or BSSIDs only (one per line). Capture/crack refuse targets not listed here.
+# Examples:
+# Lab-WPA2
+# aa:bb:cc:dd:ee:01
+
+Lab-WPA2

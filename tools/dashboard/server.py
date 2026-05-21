@@ -186,6 +186,9 @@ def build_project_summary(name: str) -> dict | None:
             "subs": count_lines(recon / "subs.txt"),
             "live": count_lines(recon / "live.txt"),
             "urls": count_lines(recon / "urls.txt"),
+            "network": {
+                "openPorts": count_lines(recon / "network" / "open-ports.txt"),
+            },
             "nuclei": {
                 "total": nuc_total,
                 "bySeverity": nuclei,
@@ -224,6 +227,15 @@ def build_project_detail(name: str) -> dict | None:
         except OSError:
             live_preview = []
 
+    open_ports_preview = None
+    open_ports_path = recon / "network" / "open-ports.txt"
+    if open_ports_path.is_file():
+        try:
+            with open_ports_path.open("r", encoding="utf-8", errors="replace") as fh:
+                open_ports_preview = [ln.strip() for ln in fh if ln.strip()][:20]
+        except OSError:
+            open_ports_preview = []
+
     files: list[dict] = []
     for rel in (
         "reports/findings.md",
@@ -231,6 +243,7 @@ def build_project_detail(name: str) -> dict | None:
         "recon/run.log",
         "recon/README.md",
         "notes/README.md",
+        "recon/network/open-ports.txt",
         "recon/nuclei/summary.txt",
         "recon/sqlmap/vulnerable.txt",
         "recon/sqlmap/findings.json",
@@ -258,6 +271,7 @@ def build_project_detail(name: str) -> dict | None:
             "sqliVulnerable": read_text(recon / "sqlmap" / "vulnerable.txt", limit=20000),
         },
         "liveHosts": live_preview,
+        "openPortsPreview": open_ports_preview,
         "files": files,
     }
 

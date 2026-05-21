@@ -15,12 +15,13 @@ GO_TOOLS=(
   "github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
   "github.com/projectdiscovery/katana/cmd/katana@latest"
   "github.com/lc/gau/v2/cmd/gau@latest"
+  "github.com/projectdiscovery/naabu/v2/cmd/naabu@latest"
 )
 
 BREW_FORMULAE=(ffuf jq findomain sqlmap)
 BREW_CASKS=(burp-suite)
 
-REQUIRED_BINS=(subfinder assetfinder httpx waybackurls gau katana dnsx ffuf nuclei jq)
+REQUIRED_BINS=(subfinder assetfinder httpx waybackurls gau katana dnsx naabu ffuf nuclei jq)
 
 log() { echo "[+] $*"; }
 warn() { echo "[!] $*" >&2; }
@@ -113,6 +114,7 @@ main() {
   install_go_tools
   install_brew_packages
   update_nuclei_templates
+  ensure_lab_path
   verify_tools
   log "Setup complete. Open tools/dashboard/recon.html for command reference."
   log "Permanent PATH fix — add to ~/.zshrc:"
