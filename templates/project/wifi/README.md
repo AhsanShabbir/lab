@@ -1,6 +1,6 @@
 # WiFi lab — __TARGET__
 
-**Authorized use only.** Only attack networks you own. Add your lab SSID or BSSID to `config/wifi-allowlist.txt` before capture/crack.
+**Authorized use only.** Only attack networks you own. Optional: add SSIDs to `config/wifi-allowlist.txt` and pass `--only-allowlist` to restrict capture/crack to that list.
 
 ## Quick start
 

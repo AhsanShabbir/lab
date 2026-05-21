@@ -12,3 +12,7 @@ projects/**/recon/*.json
 projects/**/recon/*.log
 projects/**/recon/fuzz/
 projects/**/recon/nuclei/
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore

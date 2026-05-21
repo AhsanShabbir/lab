@@ -16,8 +16,7 @@ usage() {
   cat <<EOF
 Usage: wifi [options]
 
-WiFi lab pipeline (Mac-first). Only allowlisted SSIDs/BSSIDs may be captured/cracked.
-Edit: config/wifi-allowlist.txt
+WiFi lab pipeline (Mac-first). Allowlist is optional; use --only-allowlist to enforce config/wifi-allowlist.txt
 
 Options (passed to run-wifi.sh):
   --scan              List nearby networks
@@ -29,6 +28,7 @@ Options (passed to run-wifi.sh):
   --crack             Run crack (+ report)
   --resume            Skip stages with existing output
   --require-capture   Fail if capture/inbox/ is empty
+  --only-allowlist    Only capture/crack allowlisted SSIDs/BSSIDs
 
 Examples:
   ./wifi --scan
